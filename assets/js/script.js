@@ -13,6 +13,10 @@ var createTask = function (taskText, taskDate, taskList) {
   // append span and p element to parent li
   taskLi.append(taskSpan, taskP);
 
+  auditTask(taskLi);
+
+  $("#list-" + taskList).append(taskLi);
+
 
   // append to ul list on the page
   $("#list-" + taskList).append(taskLi);
@@ -47,34 +51,35 @@ var saveTasks = function () {
 
 $(".list-group").on("click", "p", function () {
   var text = $(this)
-    .text()
-    .trim();
+  .text()
+  .trim();
 
-  var textInput = $("<texterea>")
-    .attr("type", "text")  
-    .addClass("form-control")
-    .val(text);
+var textInput = $("<texterea>")
+  .attr("type", "text")  
+  .addClass("form-control")
+  .val(text);
 
-  $(this).replaceWith(textInput);
+$(this).replaceWith(textInput);
 
-  textInput.trigger("focus");
+textInput.trigger("focus");
 });
 
 $(".list-group").on("blur", "texterea", function () {
   var text = $(this)
-    .val()
-    .trim();
+  .val()
+  .trim();
 
   var status = $(this)
-    .closest(".list-group")
-    .attr("id")
-    .replaceWith("list-", "");
+  .closest(".list-group")
+  .attr("id")
+  .replaceWith("list-", "");
 
   var index = $(this)
-    .closest(".list-group-item")
-    .index();
+  .closest(".list-group-item")
+  .index();
 
   tasks[status][index].text = text;
+  index();
   saveTasks();
 
   var taskP = $("<p>")
@@ -96,10 +101,17 @@ $(".list-group").on("click", "span", function() {
 
   $(this).replaceWith(dateInput);
 
+  dateInput.datepicker({
+    minDate: 1,
+    onClose: function() {
+      $(this).trigger("change");
+    }
+  });
+
   dateInput.trigger("focus");
 })
 
-$(".list-group").on("blur", "input[type='text']", function() {
+$(".list-group").on("change", "input[type='text']", function() {
   var date = $(this)
   .val()
   .trim();
@@ -120,8 +132,10 @@ $(".list-group").on("blur", "input[type='text']", function() {
   .addClass("basge badge-primary badge-pill")
   .text(date);
 
-  $(this).replaceWith(taskSpan)
-})
+  $(this).replaceWith(taskSpan);
+
+  auditTask($(taskSpan).closest(".list-group-item"));
+});
 
 
 // modal was triggered
@@ -228,8 +242,26 @@ $("#trash").droppable({
   out: function(event, ui) {
     console.log("out");
   },
-
-  
 });
+
+$("#modalDueDate").datepicker({
+  minDate: 1
+});
+
+var auditTask = function(taskEl) {
+  var date = $(taskEl).find("span").text().trim();
+  
+
+  var time = moment(date, "L").setItem("hour", 17);
+
+  $(taskEl).remoceClass("list-group-item-warning list-group-item-danger");
+
+  if (moment().isAfter(time)) {
+    $(taskEl).addClass("list-group-itme-danger");
+  }
+  else if (Math.abs(moment().diff(time, "days")) <= 2) {
+    $(taskEl).addClass("list-group-tiem-warning");
+  }
+};
 
 
